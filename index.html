@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<link href="https://fonts.googleapis.com/css?family=PT+Sans|Pacifico|Overpass" rel="stylesheet">
+	<title>Document</title>
+	<script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+	<script>
+		function init(amount) {
+			var stage = new createjs.Stage("demoCanvas");
+			var queue = new createjs.LoadQueue(true);
+			var points = 0;
+			var text = new createjs.Text("Stardust: " + points, "55px Overpass", "#ff7700");
+			queue.loadFile({ id: "star", src: "star_plain.png" });
+			queue.loadFile({ id: "starface", src: "star_with_face.png" });
+			var stars = new Array(amount);
+			var index = 0;
+			createjs.Sound.registerSound("StarSound.wav", "star");
+
+			stage.enableMouseOver(120);
+
+
+			function Star(index) {
+				this.index = index;
+				this.xVel = Math.random() * 5;
+				this.yVel = (Math.random() * 10) + (points / 1000);
+				this.startx = Math.random() * 1280;
+				if (Math.random() > 0.5) {
+					this.xVel *= -1;
+				}
+				this.starty = -150 + Math.random() * 30;
+				if (Math.random() < 0.8)
+					this.variant = 0;
+				else
+					this.variant = 1;
+
+				this.addPoints = function () {
+					if (this.variant == 0) {
+						points += 50;
+					} else if (this.variant == 1) {
+						points += 75;
+					}
+					text.text = "Stardust: " + points;
+					return;
+				}
+			}
+
+			function createStar(i) {
+				stars[i] = new Star(i);
+				if (stars[i].variant == 0)
+					starImg = new createjs.Bitmap(queue.getResult("star"));
+				else
+					starImg = new createjs.Bitmap(queue.getResult("starface"));
+
+				stars[i].obj = stage.addChildAt(starImg, stars[i].index);
+				stars[i].obj.x = stars[i].startx;
+				stars[i].obj.y = stars[i].starty;
+				stars[i].obj.scaleX = 3;
+				stars[i].obj.scaleY = 3;
+				var hit = new createjs.Shape();
+				hit.graphics.beginFill("#000").drawRect(-15, -15, 70, 70);
+				stars[i].obj.hitArea = hit;
+
+				stars[i].obj.addEventListener('click', function () {
+					stars[i].addPoints();
+					stage.removeChildAt(i);
+					createjs.Sound.play("star");
+					createStar(i);
+				})
+			}
+
+			for (let i = 0; i < amount; i++) {
+				createStar(i);
+			}
+
+			stage.addChild(text);
+
+			createjs.Ticker.framerate = 60;
+			createjs.Ticker.on("tick", tick);
+			function tick() {
+				for (let i = 0; i < amount; i++) {
+					if (Math.random() < 0.001)
+						stars[i].xVel *= -1;
+					stars[i].obj.x -= stars[i].xVel;
+					stars[i].obj.y += stars[i].yVel;
+
+					if (stars[i].obj.x >= 1500) {
+						stage.removeChildAt(i);
+						createStar(i);
+					} else if (stars[i].obj.x <= -150) {
+						stage.removeChildAt(i);
+						createStar(i);
+					}
+
+					if (stars[i].obj.y >= 1000) {
+						stage.removeChildAt(i);
+						createStar(i);
+					} else if (stars[i].obj.y <= -150) {
+						stage.removeChildAt(i);
+						createStar(i);
+					}
+				}
+
+				stage.update();
+			}
+
+		} 
+	</script>
+</head>
+
+<body onload="init(10);" style="overflow: hidden">
+	<canvas id="demoCanvas" width="1400" height="910"></canvas>
+</body>
+</html>
